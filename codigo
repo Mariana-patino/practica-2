@@ -1,0 +1,88 @@
+% -------------------------
+% Catálogo de vehículos
+% vehicle(Marca, Referencia, Tipo, Precio, Año).
+% -------------------------
+
+vehicle(toyota, corolla, sedan, 22000, 2021).
+vehicle(toyota, rav4, suv, 28000, 2022).
+vehicle(ford, mustang, sport, 45000, 2023).
+vehicle(ford, escape, suv, 26000, 2022).
+vehicle(bmw, x5, suv, 60000, 2021).
+vehicle(bmw, m3, sport, 70000, 2023).
+vehicle(chevrolet, silverado, pickup, 35000, 2022).
+vehicle(honda, civic, sedan, 21000, 2021).
+vehicle(honda, crv, suv, 27000, 2022).
+vehicle(nissan, frontier, pickup, 32000, 2023).
+
+% -------------------------
+% Parte 2: Consultas básicas
+% -------------------------
+
+cumple_presupuesto(Referencia, PresupuestoMax) :-
+    vehicle(_, Reference, _, Precio, _),
+    Precio =< PresupuestoMax.
+
+vehiculos_por_marca(Marca, Lista) :-
+    findall(Referencia, vehicle(Marca, Referencia, _, _, _), Lista).
+
+% -------------------------
+% Parte 3: Generación de reportes
+% -------------------------
+
+generate_report(Marca, Tipo, Presupuesto, reporte(Vehiculos, ValorTotal)) :-
+    findall((Referencia, Precio),
+            (vehicle(Marca, Referencia, Tipo, Precio, _), Precio =< Presupuesto),
+            ListaVehiculos),
+    sumar_precios(ListaVehiculos, ValorTotal),
+    ValorTotal =< 1000000,
+    extraer_referencias(ListaVehiculos, Vehiculos).
+
+extraer_referencias([], []).
+extraer_referencias([(Ref,_)|T], [Ref|RT]) :-
+    extraer_referencias(T, RT).
+
+sumar_precios([], 0).
+sumar_precios([(_, Precio)|T], Total) :-
+    sumar_precios(T, SubTotal),
+    Total is SubTotal + Precio.
+
+% -------------------------
+% Parte 4: Casos de prueba
+% -------------------------
+
+caso1(Resultado) :-
+    findall(Ref,
+            (vehicle(toyota, Ref, suv, Precio, _), Precio < 30000),
+            Resultado).
+
+caso2(Agrupado) :-
+    bagof((Tipo, Anio, Ref),
+          vehicle(ford, Ref, Tipo, _, Anio),
+          Agrupado).
+
+caso3(Filtrados, ValorTotal) :-
+    findall((Ref, Precio),
+            (vehicle(_, Ref, sedan, Precio, _), Precio =< 500000),
+            Lista),
+    sumar_precios(Lista, ValorTotal),
+    extraer_referencias(Lista, Filtrados).
+
+% -------------------------
+% Ejecución principal automática
+% -------------------------
+
+main :-
+    writeln('--- Consulta 1: SUVs Toyota < $30,000 ---'),
+    caso1(R1), writeln(R1),
+
+    writeln('--- Consulta 2: Vehículos Ford por tipo y año ---'),
+    caso2(R2), writeln(R2),
+
+    writeln('--- Consulta 3: Valor total de sedanes <= $500,000 ---'),
+    caso3(Filtrados, Valor), writeln(Filtrados), writeln('Total: '), writeln(Valor),
+
+    writeln('--- Consulta 4: Reporte Toyota SUV < $30,000 ---'),
+    generate_report(toyota, suv, 30000, Reporte),
+    writeln(Reporte).
+
+:- main.
